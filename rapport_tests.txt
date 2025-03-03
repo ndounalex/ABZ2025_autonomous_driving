@@ -1,0 +1,11 @@
+on_road_reward: 3653
+high_speed_reward: 1909.42
+right_lane_reward: 2296
+collision_reward: 1
+crashes: 1
+total_reward: 0
+min_speed: 6.02967
+max_speed: 39.8283
+action counters : [47,9,35,1766,1796]
+
+================================ rapport de test ======================
