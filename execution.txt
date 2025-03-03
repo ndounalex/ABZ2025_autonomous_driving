@@ -1,0 +1,2 @@
+advanceOf(sec,1)
+advanceOf(sec,100000)
