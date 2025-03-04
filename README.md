@@ -17,6 +17,14 @@ Go to page [cASTD Wiki](https://depot.gril.usherbrooke.ca/lionel-tidjon/castd/wi
 
 The translation rules and the compilation approach are available [here](https://github.com/DiegoOliveiraUDES/astd-tech-report-27).
 
+## ReadTheDocs
+
+Check our full documentation [online](https://castd.readthedocs.io/).
+
+## Slack channel
+
+Join project discussions [here](https://astd-cse.slack.com/)
+
 ## Training and testing of agents
 
 Setup:
