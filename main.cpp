@@ -1,4 +1,4 @@
-#include <Python.h>
+#include </usr/include/python3.8/Python.h>
 #include </usr/include/python3.8/pyconfig.h>
 #include "iostream"
 #include <stdio.h>
@@ -6,7 +6,7 @@
 double** vehicle_env;
 double** vehicle_env_temp;
 bool first = true;
-PyObject *name, *load_module, *func, *callfunc, *args;
+PyObject *name, *load_module, *func, *callfunc, *args, *update_state;
 
 double fun1_out;
 double vehicle_lane;
@@ -113,7 +113,7 @@ void generate_first_env(){
     vehicle_env_temp = vehicle_env;
 }
 
-void initPython()
+void initPython(bool multi_lane, std::string mode)
 {
     Py_Initialize();
     PyObject *sysmodule = PyImport_ImportModule("sys");
@@ -122,14 +122,24 @@ void initPython()
     Py_DECREF(syspath);
     Py_DECREF(sysmodule);
     //name = PyUnicode_FromString((char*)"TestSingleBase");
-    name = PyUnicode_FromString((char*)"TestSingleBase");
-    //std::cout << "Init python 2.3"<< std::endl;
-    //std::cout << name<< std::endl;
+    std::cout << "multi_lane: "<< multi_lane<< std::endl;
+    std::cout << "mode: "<< mode<< std::endl;
+    if(multi_lane){
+        if(mode=="base"){
+            name = PyUnicode_FromString((char*)"Astd_Highway_Base");
+        }else{
+            name = PyUnicode_FromString((char*)"Astd_Highway_Adversarial");
+        }
+    }else{
+        if(mode=="adversarial"){
+            name = PyUnicode_FromString((char*)"Astd_Highway_Single_Adversarial");
+        }else{
+            name = PyUnicode_FromString((char*)"Astd_Highway_Single_Base");
+        }
+    }
+    // name = PyUnicode_FromString((char*)"Astd_Highway_Adversarial");
     load_module  = PyImport_Import(name);
-    //std::cout << load_module<< std::endl;
     generate_first_env();
-    //std::cout << "Init python 4"<< std::endl;
-    //std::cout << "Init python 4"<< std::endl;
 }
 
 double** initializeEnv(){
@@ -211,42 +221,43 @@ void stop_test(){
 
 void update_state_from_action(bool pre_check){
     func = PyObject_GetAttrString(load_module,(char*)"update_state");
-        args = PyTuple_Pack(2, PyFloat_FromDouble(fun1_out), PyFloat_FromDouble(1));
-        callfunc =PyObject_CallObject(func,args);
-        if(!callfunc){
-            PyErr_WriteUnraisable(callfunc);
-        }
-        PyObject* new_state = PyDict_GetItemString(callfunc, (char*)"state");
-        PyObject* lane = PyDict_GetItemString(callfunc, (char*)"lane");
-        PyObject* colision = PyDict_GetItemString(callfunc, (char*)"colision");
-        Py_ssize_t c_defaults_len = 2;
-        
-        PyObject* current_line = PyTuple_GetItem(lane, c_defaults_len);
-        vehicle_lane = PyFloat_AsDouble(current_line);
-        count = (int) PyList_Size(new_state);
-        crashed = !!(PyObject_IsTrue(colision));
-        //std::cout << count<< std::endl;
-        double **temp;
-        temp = new double*[count];
-        PyObject *ptemp,  *ptempsub;
-        for (int i = 0 ; i < count ; i++ )
-        {
-            ptemp = PyList_GetItem(new_state,i);
-            temp[i]= new double[5];
-            for(int j=0; j < 5 ; j++ ){
-                ptempsub = PyList_GetItem(ptemp,j);
-                temp[i][j]=PyFloat_AsDouble(ptempsub);
-            }
-        }
-    if(pre_check){
-        vehicle_env_temp = temp;
-    }else{
-        vehicle_env = temp;
+    args = PyTuple_Pack(2, PyFloat_FromDouble(fun1_out), PyFloat_FromDouble(1));
+    callfunc =PyObject_CallObject(func,args);
+    if(!callfunc){
+        PyErr_WriteUnraisable(callfunc);
     }
+    PyObject* new_state = PyDict_GetItemString(callfunc, (char*)"state");
+    PyObject* lane = PyDict_GetItemString(callfunc, (char*)"lane");
+    PyObject* colision = PyDict_GetItemString(callfunc, (char*)"colision");
+    Py_ssize_t c_defaults_len = 2;
+    
+    PyObject* current_line = PyTuple_GetItem(lane, c_defaults_len);
+    vehicle_lane = PyFloat_AsDouble(current_line);
+    count = (int) PyList_Size(new_state);
+    crashed = !!(PyObject_IsTrue(colision));
+    //std::cout << count<< std::endl;
+    double **temp;
+    temp = new double*[count];
+    PyObject *ptemp,  *ptempsub;
+    for (int i = 0 ; i < count ; i++ )
+    {
+        ptemp = PyList_GetItem(new_state,i);
+        temp[i]= new double[5];
+        for(int j=0; j < 5 ; j++ ){
+            ptempsub = PyList_GetItem(ptemp,j);
+            temp[i][j]=PyFloat_AsDouble(ptempsub);
+        }
+    }
+if(pre_check){
+    vehicle_env_temp = temp;
+}else{
+    vehicle_env = temp;
+}
       
 }
 
 void continues_braking_until_safe_distance (float response_time, float rear_max_acc, float front_max_bra, float rear_bra_acc, bool pre_check){
+    std::cout<<" Before crashed value : "<<crashed<<"\n";
     update_state_from_action(false);
     std::cout<<" crashed value : "<<crashed<<"\n";
     if(crashed){return;}
@@ -368,6 +379,8 @@ bool single_control_safety(float response_time, float rear_max_acc, float front_
 
 bool control_safety(float response_time, float rear_max_acc, float front_max_bra, float rear_bra_acc, bool pre_check) {
     // return single_control_safety(response_time, rear_max_acc, front_max_bra, rear_bra_acc);
+    bool multi_lane = false;
+    if((!multi_lane)&&(action==0||action==2)){action=1;}
     bool validAction = true;
     int* frontAndRear= pre_check? get_front_and_rear_vehicle_temp():get_front_and_rear_vehicle();
     double** vehicles;
@@ -462,7 +475,7 @@ bool control_safety(float response_time, float rear_max_acc, float front_max_bra
 
 int mainTest(int argc, char *argv[]){
     // Py_Initialize();
-    initPython();
+    // initPython();
 
     while(true){
         if(first){

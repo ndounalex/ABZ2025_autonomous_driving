@@ -52,6 +52,7 @@ std::string automatic_input;
 
 bool multi_lane;
 bool pre_check = false;
+std::string mode;
 
 /*
  * @brief The event data structure containing its label and its parameters
@@ -122,8 +123,9 @@ public:
         const char* const short_opts = "i:1:2:h";
 
         const option long_opts[] = {
-            {"multi_lane", required_argument, nullptr, '1'},
-            {"pre_check", required_argument, nullptr, '2'},
+            {"mode", required_argument, nullptr, '1'},
+            {"multi_lane", required_argument, nullptr, '2'},
+            //{"pre_check", required_argument, nullptr, '2'},
         };
 
         while (true)
@@ -144,29 +146,29 @@ public:
                 break;
              }
              case '1': 
-                 multi_lane = Types::get_bool(optarg); 
+                 mode = Types::get_str(optarg); 
                  break;
              case '2': 
-                 pre_check = Types::get_bool(optarg); 
+                 multi_lane = Types::get_bool(optarg); 
                  break;
              
-             case 'h':
-             { 
-                 std::cout << "This program has been compiled by cASTD." << "\n";
-                 std::cout << "./my_program [-i <event file>]  [-h]" << "\n";
-                 std::cout << "[OPTIONS]     								     " << "\n";
-                 std::cout << "   -i <event  file>  Read an event file in Shorthand format." << "\n";
-                 std::cout << "                     If an event file is not given, it runs in interactive" << "\n";
-                 std::cout << "                     mode from command line" << "\n";
-                 std::cout << "   -multi_lane <value> Parameter of the ASTD" << std::endl;
-                 std::cout << "   -pre_check <value> Parameter of the ASTD" << std::endl;
-                 
-                 
-                 
-                 std::cout << "   -h                Show this help" << "\n";
-                 exit(0);
-                 break;
-             }
+                 case 'h':
+                 { 
+                     std::cout << "This program has been compiled by cASTD." << "\n";
+                     std::cout << "./my_program [-i <event file>] [-mode <value>] [-multi_lane <value>]  [-h]" << "\n";
+                     std::cout << "[OPTIONS]     								     " << "\n";
+                     std::cout << "   -i <event  file>  Read an event file in Shorthand format." << "\n";
+                     std::cout << "                     If an event file is not given, it runs in interactive" << "\n";
+                     std::cout << "                     mode from command line" << "\n";
+                        std::cout << "   -mode <value> Parameter of the ASTD" << std::endl;
+                        std::cout << "   -multi_lane <value> Parameter of the ASTD" << std::endl;
+                     
+                     
+                     
+                     std::cout << "   -h                Show this help" << "\n";
+                     exit(0);
+                     break;
+                 }
              
          }   
      }
